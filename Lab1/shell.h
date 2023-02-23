@@ -10,6 +10,6 @@ void execute_command(char *args[]);
 
 bool read_input(char *input);
 
-void parse_input(char *input, char *args[]);
+void parse_input(char *input);
 
 #endif /* SHELL_H */

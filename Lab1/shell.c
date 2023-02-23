@@ -82,7 +82,7 @@ void execute_commands(char *input) {
     }
 }
 
-void parse_input(char *input, char *args[]) {
+void parse_input(char *input) {
     execute_commands(input);
 }
 
