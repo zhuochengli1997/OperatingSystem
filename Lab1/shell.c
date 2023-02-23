@@ -32,6 +32,9 @@ bool read_input(char *input) {
         return false;
     }
     input[strcspn(input, "\n")] = '\0';
+    if (strcmp(input, "exit") == 0) {
+        exit(EXIT_SUCCESS);
+    }
     return true;
 }
 
