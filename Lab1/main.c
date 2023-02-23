@@ -1,34 +1,27 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stdbool.h>
-
-#include "scanner.h"
+#include <unistd.h>
 #include "shell.h"
+#include "scanner.h"
 
-int main(int argc, char *argv[]) {
-    char *inputLine;
-    List tokenList;
+#define MAX_INPUT_SIZE 1024
 
-    //TODO: Signal back that the loop must stop when "exit" has been encountered (or EOF)
+int main() {
+    char input[MAX_INPUT_SIZE];
+    char *args[MAX_ARGS];
+
     while (true) {
-        inputLine = readInputLine();
-        tokenList = getTokenList(inputLine);
+        printf("shell> ");
 
-        bool parsedSuccessfully = parseInputLine(&tokenList);
-        if (tokenList == NULL && parsedSuccessfully) {
-            // Input was parsed successfully and can be accessed in "tokenList"
-
-            // However, this is still a simple list of strings, it might be convenient
-            // to build some intermediate structure representing the input line or a
-            // command that you then construct in the parsing logic. It's up to you
-            // to determine how to approach this!
-        } else {
-            printf("Error: invalid syntax!\n");
+        if (!read_input(input)) {
+            break;
         }
 
-        free(inputLine);
-        freeTokenList(tokenList);
+        parse_input(input, args);
+        execute_command(args);
     }
-    
-    return 0;
+
+    return EXIT_SUCCESS;
 }

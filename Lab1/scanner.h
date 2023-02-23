@@ -1,24 +1,12 @@
 #ifndef SCANNER_H
 #define SCANNER_H
 
-#define INITIAL_STRING_SIZE 10
+#include <stdbool.h>
 
-typedef struct ListNode *List;
+bool is_whitespace(char c);
 
-typedef struct ListNode {
-    char *t;
-    List next;
-} ListNode;
+bool is_delimiter(char c);
 
+char *trim_whitespace(char *str);
 
-char *readInputLine();
-
-List getTokenList(char *s);
-
-bool isEmpty(List l);
-
-void printList(List l);
-
-void freeTokenList(List l);
-
-#endif
+#endif /* SCANNER_H */

@@ -1,9 +1,19 @@
+CC = gcc
+CFLAGS = -Wall -Wextra -g
+
 all: shell
 
-shell:
-	gcc -std=c99 -Wall -pedantic main.c scanner.c shell.c -o shell
+shell: main.o scanner.o shell.o
+	$(CC) $(CFLAGS) -o shell main.o scanner.o shell.o
+
+main.o: main.c shell.h
+	$(CC) $(CFLAGS) -c main.c
+
+scanner.o: scanner.c scanner.h
+	$(CC) $(CFLAGS) -c scanner.c
+
+shell.o: shell.c shell.h
+	$(CC) $(CFLAGS) -c shell.c
 
 clean:
-	rm -f *~
-	rm -f *.o
-	rm -f shell
+	rm -f *.o shell
