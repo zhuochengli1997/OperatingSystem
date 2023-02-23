@@ -8,7 +8,7 @@ bool is_whitespace(char c) {
 }
 
 bool is_delimiter(char c) {
-    return c == '|' || c == '<' || c == '>';
+    return c == '|' || c == '<' || c == '>' || strcmp(&c,"&&") == 0 || strcmp(&c,"||") == 0 || strcmp(&c,";") == 0 ;
 }
 
 char *trim_whitespace(char *str) {

@@ -38,12 +38,51 @@ bool read_input(char *input) {
     return true;
 }
 
-void parse_input(char *input, char *args[]) {
-    int arg_count = 0;
-    char *arg = strtok(input, " ");
-    while (arg != NULL && arg_count < MAX_ARGS) {
-        args[arg_count++] = arg;
-        arg = strtok(NULL, " ");
+void execute_commands(char *input) {
+    char *command;
+    char *commands[MAX_ARGS];
+    int command_count = 0;
+    int i = 0;
+
+    command = strtok(input, "&&");
+    while (command != NULL && command_count < MAX_ARGS) {
+        commands[command_count++] = command;
+        command = strtok(NULL, "&&");
     }
-    args[arg_count] = NULL;
+
+    int status = 0;
+    for (i = 0; i < command_count; i++) {
+        char *args[MAX_ARGS];
+        int arg_count = 0;
+        char *arg = strtok(commands[i], " ");
+        while (arg != NULL && arg_count < MAX_ARGS) {
+            args[arg_count++] = arg;
+            arg = strtok(NULL, " ");
+        }
+        args[arg_count] = NULL;
+
+        pid_t pid = fork();
+        if (pid == -1) {
+            perror("fork");
+            exit(EXIT_FAILURE);
+        } else if (pid == 0) {
+            if (strcmp(args[0], "exit") == 0) {
+                exit(EXIT_SUCCESS);
+            }
+            if (execvp(args[0], args) == -1) {
+                perror("execvp");
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            waitpid(pid, &status, 0);
+            if (status != 0) {
+                break;
+            }
+        }
+    }
 }
+
+void parse_input(char *input, char *args[]) {
+    execute_commands(input);
+}
+
