@@ -44,10 +44,10 @@ void execute_commands(char *input) {
     int command_count = 0;
     int i = 0;
 
-    command = strtok(input, "&&");
+    command = strtok(input, "&&||;");
     while (command != NULL && command_count < MAX_ARGS) {
         commands[command_count++] = command;
-        command = strtok(NULL, "&&");
+        command = strtok(NULL, "&&||;");
     }
 
     int status = 0;
