@@ -24,6 +24,7 @@ void execute_commands(char *input) {
     int command_count = split_commands(input, commands);
 
     int status = 0;
+    bool command_success = false;
     for (int i = 0; i < command_count; i++) {
         char *args[MAX_ARGS];
         int arg_count = split_args(commands[i], args);
@@ -41,12 +42,25 @@ void execute_commands(char *input) {
             execute_command(args);
         } else {
             waitpid(pid, &status, 0);
-            if (status != 0) {
-                break;
+            if (WIFEXITED(status)) {
+                int exit_status = WEXITSTATUS(status);
+                if (exit_status == 0) {
+                    command_success = true;
+                    i++;
+                }
+            } else {
+                perror("waitpid");
+                exit(EXIT_FAILURE);
             }
         }
     }
+
+    if (!command_success) {
+        fprintf(stderr, "All commands failed\n");
+        exit(EXIT_FAILURE);
+    }
 }
+
 
 int split_commands(char *input, char *commands[]) {
     int command_count = 0;
