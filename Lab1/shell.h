@@ -20,4 +20,7 @@ int split_commands(char *input, char *commands[]);
 
 int split_args(char *command, char *args[]);
 
+void check_exit(char* string);
+
+
 #endif /* SHELL_H */
