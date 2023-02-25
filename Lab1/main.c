@@ -10,17 +10,16 @@
 #define MAX_INPUT_SIZE 1024
 #define MAX_PATH 255
 
+
+/**
+ * It reads a line of input from the user, and then parses it
+ * 
+ * @return The exit status of the program.
+ */
 int main() {
     char input[MAX_INPUT_SIZE];
 
     while (true) {
-        // char path[MAX_PATH];
-
-        // if(getcwd(path,MAX_PATH) != NULL){
-        //     printf("%s>",path);
-        // }else{
-        //     printf("shell> ");
-        // }
         
         if (!read_input(input)) {
             break;
