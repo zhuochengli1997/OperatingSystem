@@ -178,12 +178,13 @@ void execute_command(char *args[]) {
         exit(EXIT_SUCCESS);
     }
     if (strcmp(args[0], "status") == 0) {
-        printf("The most recent exit code is: %d\n", recent_exit_status);
+        printf("The most recent exit code is: %d.\n", recent_exit_status);
     }
     else if (execvp(args[0], args) == -1) {
         //HERE, LOOK INTO POSSIBLE WAYS TO CHECK IF IT IS INVALID SYNTAX OR COMMAND NOT FOUND! print with perror? 
-        perror("Error: Command not found!\n");
-        perror("execvp");
+        //perror prints to stderr, and themis only checks for error in stdout. change?
+        fprintf(stdout, "Error: Command not found!\n");
+        //perror("execvp");
         exit(EXIT_FAILURE);
     }
 }

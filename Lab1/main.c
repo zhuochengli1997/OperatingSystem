@@ -19,6 +19,9 @@
 int main() {
     char input[MAX_INPUT_SIZE];
 
+    setbuf(stdin, NULL);
+    setbuf(stdout, NULL);
+
     while (true) {
         
         if (!read_input(input)) {
