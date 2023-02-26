@@ -24,7 +24,7 @@ int main() {
 
     while (true) {
         
-        if (!read_input(input)) {
+        if (!read_input(input)) {   
             break;
         }
 

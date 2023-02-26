@@ -38,12 +38,15 @@ bool read_input(char *input) {
 void execute_pipe_commands(char *input) {
     char *commands[MAX_ARGS];
     int command_count = split_piped(input, commands);
-
+    
+    int before_status = 0;
     int status = 0;
     for (int i = 0; i < command_count; i++) {
         char *args[MAX_ARGS];
         int arg_count = split_args(commands[i], args);
         args[arg_count] = NULL;
+
+        before_status = recent_exit_status;
 
         if (strcmp(args[0], "exit") == 0) {
             exit(EXIT_SUCCESS);
@@ -59,6 +62,9 @@ void execute_pipe_commands(char *input) {
             waitpid(pid, &status, 0);
             if (WIFEXITED(status)) {
                 recent_exit_status = WEXITSTATUS(status);
+            }
+            if (recent_exit_status == 1 && strstr(commands[i + 1], "status") != NULL) {
+                recent_exit_status = before_status;
             }
             //status is 0, so previous command was executed and thus we do not need to execute the next command, thus break!
             if (status == 0) {
