@@ -3,8 +3,8 @@
 
 #include <stdbool.h>
 
-#define MAX_INPUT_SIZE 1024
-#define MAX_ARGS 64
+#define MAX_INPUT_SIZE 10240
+#define MAX_ARGS 640
 
 void execute_command(char *args[]);
 
