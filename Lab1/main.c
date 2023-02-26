@@ -7,7 +7,7 @@
 #include "shell.h"
 #include "scanner.h"
 
-#define MAX_INPUT_SIZE 10240
+#define MAX_INPUT_SIZE 102400
 #define MAX_PATH 2550
 
 
