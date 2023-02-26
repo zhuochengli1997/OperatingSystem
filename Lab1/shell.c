@@ -63,10 +63,12 @@ void execute_pipe_commands(char *input) {
             if (WIFEXITED(status)) {
                 recent_exit_status = WEXITSTATUS(status);
             }
+            /*the previous exit status of the argument before the "||" was 1, and after the "||" we have status. then, we need to display the exit 
+            status of the previous command (and not the command before the "||")*/
             if (recent_exit_status == 1 && i < command_count - 1 && strstr(commands[i + 1], "status") != NULL) {
                 recent_exit_status = before_status;
             }
-            //status is 0, so previous command was executed and thus we do not need to execute the next command, thus break!
+            //status is 0, so previous command was executed and we do not need to execute the next command, thus break!
             if (status == 0) {
                 break;
             }
@@ -186,13 +188,10 @@ void execute_command(char *args[]) {
 
     if (strcmp(args[0], "status") == 0) {
         printf("The most recent exit code is: %i\n", recent_exit_status);
-        exit(recent_exit_status);
+        exit(EXIT_SUCCESS);
     }
     else if (execvp(args[0], args) == -1) {
-        //HERE, LOOK INTO POSSIBLE WAYS TO CHECK IF IT IS INVALID SYNTAX OR COMMAND NOT FOUND! print with perror? 
-        //perror prints to stderr, and themis only checks for error in stdout. change?
         fprintf(stdout, "Error: command not found!\n");
-        //perror("execvp");
         exit(127);
     }
 }
