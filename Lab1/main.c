@@ -3,7 +3,6 @@
 #include <string.h>
 #include <stdbool.h>
 #include <unistd.h>
-#include <unistd.h>
 #include "shell.h"
 #include "scanner.h"
 
@@ -18,11 +17,18 @@
  */
 int main() {
     char input[MAX_INPUT_SIZE];
-
+    char path[MAX_PATH];
+    
     setbuf(stdin, NULL);
     setbuf(stdout, NULL);
+    char* username = getlogin();
 
     while (true) {
+        if(getcwd(path,MAX_PATH) != NULL){
+            printf("\033[1;36m%s\033[0m:\033[1;32m%s\033[0m>> ", username, path);
+        }else{
+            printf(">> ");
+        }
         
         if (!read_input(input)) {   
             break;
