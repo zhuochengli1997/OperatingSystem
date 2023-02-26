@@ -63,7 +63,7 @@ void execute_pipe_commands(char *input) {
             if (WIFEXITED(status)) {
                 recent_exit_status = WEXITSTATUS(status);
             }
-            if (recent_exit_status == 1 && strstr(commands[i + 1], "status") != NULL) {
+            if (recent_exit_status == 1 && i < command_count - 1 && strstr(commands[i + 1], "status") != NULL) {
                 recent_exit_status = before_status;
             }
             //status is 0, so previous command was executed and thus we do not need to execute the next command, thus break!
