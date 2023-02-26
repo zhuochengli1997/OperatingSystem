@@ -185,7 +185,7 @@ void execute_command(char *args[]) {
     }
     if (strcmp(args[0], "status") == 0) {
         printf("The most recent exit code is: %i\n", recent_exit_status);
-        exit(EXIT_FAILURE);
+        exit(recent_exit_status);
     }
     else if (execvp(args[0], args) == -1) {
         //HERE, LOOK INTO POSSIBLE WAYS TO CHECK IF IT IS INVALID SYNTAX OR COMMAND NOT FOUND! print with perror? 
