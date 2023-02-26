@@ -190,10 +190,7 @@ void execute_command(char *args[]) {
         exit(EXIT_SUCCESS);
     }
     else if (execvp(args[0], args) == -1) {
-        //HERE, LOOK INTO POSSIBLE WAYS TO CHECK IF IT IS INVALID SYNTAX OR COMMAND NOT FOUND! print with perror? 
-        //perror prints to stderr, and themis only checks for error in stdout. change?
         fprintf(stdout, "Error: command not found!\n");
-        //perror("execvp");
         exit(127);
     }
 }

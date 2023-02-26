@@ -9,4 +9,4 @@ bool is_delimiter(char c);
 
 char *trim_whitespace(char *str);
 
-#endif /* SCANNER_H */
+#endif
