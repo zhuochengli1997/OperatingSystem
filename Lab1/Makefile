@@ -1,18 +1,19 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -pedantic -std=c99 -g -DEXT_PROMPT
-LDFLAGS = 
+CFLAGS = -Wall -Wextra -g
 
-SRCS = main.c shell.c scanner.c
-OBJS = $(SRCS:.c=.o)
-DEPS = shell.h scanner.h
+all: shell
 
-all: myshell
+shell: main.o scanner.o shell.o
+	$(CC) $(CFLAGS) -o shell main.o scanner.o shell.o
 
-myshell: $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -o myshell
+main.o: main.c shell.h
+	$(CC) $(CFLAGS) -c main.c
 
-%.o: %.c $(DEPS)
-	$(CC) $(CFLAGS) -c $< -o $@
+scanner.o: scanner.c scanner.h
+	$(CC) $(CFLAGS) -c scanner.c
+
+shell.o: shell.c shell.h
+	$(CC) $(CFLAGS) -c shell.c
 
 clean:
-	rm -f $(OBJS) myshell
+	rm -f *.o shell

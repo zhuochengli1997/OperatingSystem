@@ -185,7 +185,6 @@ void execute_command(char *args[]) {
     if (strcmp(args[0], "exit") == 0) {
         exit(EXIT_SUCCESS);
     }
-
     if (strcmp(args[0], "status") == 0) {
         printf("The most recent exit code is: %i\n", recent_exit_status);
         exit(EXIT_SUCCESS);
