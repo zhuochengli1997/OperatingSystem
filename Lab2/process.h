@@ -7,6 +7,10 @@ typedef struct Process {
     int io_burst[100];
     int num_io_bursts;
     int num_cpu_bursts;
+    int current_cpu_burst;
+    int current_io_burst;
+    int comeback_at;
+    int is_completed;
     int turnaround_time;
 } Process;
 
