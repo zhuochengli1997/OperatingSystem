@@ -14,7 +14,7 @@ bool read_input(char *input);
 
 void parse_input(char *input);
 
-int split_piped(char *input, char *commands[]);
+int split_or(char *input, char *commands[]);
 
 int split_commands(char *input, char *commands[]);
 

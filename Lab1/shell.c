@@ -35,9 +35,9 @@ bool read_input(char *input) {
  * 
  * @param input The input string that the user entered.
  */
-void execute_pipe_commands(char *input) {
+void execute_or_commands(char *input) {
     char *commands[MAX_ARGS];
-    int command_count = split_piped(input, commands);
+    int command_count = split_or(input, commands);
     
     int before_status = 0;
     int status = 0;
@@ -88,9 +88,9 @@ void execute_commands(char *input) {
 
     int status = 0;
     for (int i = 0; i < command_count; i++) {
-        //To check if the command list contains the || character, such that we know we need to call execute_pipe_commands
+        //To check if the command list contains the || character, such that we know we need to call execute_or_commands
         if (strstr(commands[i], "||") != NULL) {
-            execute_pipe_commands(commands[i]);
+            execute_or_commands(commands[i]);
         }
         else {
             char *args[MAX_ARGS];
@@ -130,7 +130,7 @@ void execute_commands(char *input) {
  * 
  * @return The number of commands in the input.
  */
-int split_piped(char *input, char *commands[]) {
+int split_or(char *input, char *commands[]) {
     int command_count = 0;
     char *command = strtok(input, "||");
     while (command != NULL && command_count < MAX_ARGS) {
