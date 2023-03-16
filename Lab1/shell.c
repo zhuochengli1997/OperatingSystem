@@ -312,6 +312,16 @@ void execute_command(char *args[]) {
         printf("The most recent exit code is: %i\n", recent_exit_status);
         exit(EXIT_SUCCESS);
     }
+    if (strcmp(args[0],"cd") == 0){
+        if (args[1] == NULL || args[1][0] == '\0') {
+            printf("Error: cd requires folder to navigate to!\n");
+            exit(2);
+        }
+        if (chdir(args[1]) == -1) {
+            printf("Error: cd directory not found!\n");
+            exit(2);
+        }
+    }
     else if (execvp(args[0], args) == -1) {
         fprintf(stdout, "Error: command not found!\n");
         exit(127);
