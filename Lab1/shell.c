@@ -30,6 +30,27 @@ bool read_input(char *input) {
     return true;
 }
 
+
+/**
+ * Executes the "cd" command to change the working directory.
+ * 
+ * @param args The arguments of the cd command
+ * @return 0 if successful, or a non-zero value indicating an error
+ */
+int execute_cd_command(char *args[]) {
+    if (args[1] == NULL || args[1][0] == '\0') {
+        printf("Error: cd requires folder to navigate to!\n");
+        return 2;
+    }
+    if (chdir(args[1]) == -1) {
+        printf("Error: cd directory not found!\n");
+        return 2;
+    }
+    return 0;
+}
+
+
+
 /**
  * It splits the input into commands, then splits each command into arguments, then executes each
  * command in a separate process. This is for the input containing "||".
@@ -205,27 +226,36 @@ void execute_commands(char *input) {
             if (strcmp(args[0], "exit") == 0) {
                 exit(EXIT_SUCCESS);
             }
-
-            pid_t pid = fork();
-            if (pid == -1) {
-                perror("fork");
-                exit(EXIT_FAILURE);
-            }
-            else if (pid == 0) {
-                execute_command(args);
-            } else {
-                waitpid(pid, &status, 0);
-                if (WIFEXITED(status)) {
-                    recent_exit_status = WEXITSTATUS(status);
-                }
-                if (status != 0) {
+            else if (strcmp(args[0], "cd") == 0) {
+                int cd_status = execute_cd_command(args);
+                if (cd_status != 0) {
+                    recent_exit_status = cd_status;
                     break;
+                }
+            }
+            else {
+                pid_t pid = fork();
+                if (pid == -1) {
+                    perror("fork");
+                    exit(EXIT_FAILURE);
+                }
+                else if (pid == 0) {
+                    execute_command(args);
+                } else {
+                    waitpid(pid, &status, 0);
+                    if (WIFEXITED(status)) {
+                        recent_exit_status = WEXITSTATUS(status);
+                    }
+                    if (status != 0) {
+                        break;
+                    }
                 }
             }
         }
 
     }
 }
+
 
 /**
  * It takes a composed command and splits it into an array of commands, seperated by "||". 
@@ -320,6 +350,8 @@ void execute_command(char *args[]) {
         if (chdir(args[1]) == -1) {
             printf("Error: cd directory not found!\n");
             exit(2);
+        }else{
+            return;
         }
     }
     else if (execvp(args[0], args) == -1) {
@@ -327,7 +359,6 @@ void execute_command(char *args[]) {
         exit(127);
     }
 }
-
 
 /**
  * It removes all the double quotes from the input string
