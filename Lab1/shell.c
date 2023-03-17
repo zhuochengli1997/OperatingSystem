@@ -98,40 +98,6 @@ void execute_or_commands(char *input) {
     }
 }
 
-/* Function to get the input file for a command */
-char *get_input_file(char *command) {
-    char *input_file = NULL;
-    char *token;
-    token = strtok(command, "<");
-
-    /* If there is an input file, extract it */
-    if (token != NULL && strtok(NULL, "<") != NULL) {
-        input_file = strtok(NULL, "<");
-        /* Remove any leading or trailing spaces */
-        input_file[strspn(input_file, " ")] = 0;
-        int len = strlen(input_file);
-        input_file[len - strspn(input_file, " \r\n")] = 0;
-    }
-    return input_file;
-}
-
-/* Function to get the output file for a command */
-char *get_output_file(char *command) {
-    char *output_file = NULL;
-    char *token;
-    token = strtok(command, ">");
-
-    /* If there is an output file, extract it */
-    if (token != NULL && strtok(NULL, ">") != NULL) {
-        output_file = strtok(NULL, ">");
-        /* Remove any leading or trailing spaces */
-        output_file[strspn(output_file, " ")] = 0;
-        int len = strlen(output_file);
-        output_file[len - strspn(output_file, " \r\n")] = 0;
-    }
-    return output_file;
-}
-
 
 /**
  * Splits the commands by "|", and splits each commands into separate arguments. Then it executes each
@@ -141,62 +107,57 @@ void execute_pipe_commands(char *input) {
     char *commands[MAX_ARGS];
     int command_count = split_pipeline(input, commands);
 
-    for (int i = 0; i < command_count; i+=2) {
+    int in_fd = STDIN_FILENO;
+    pid_t child_pids[MAX_ARGS];
+
+    for (int i = 0; i < command_count; i++) {
         char *args[MAX_ARGS];
-        char *args2[MAX_ARGS];
         int arg_count = split_args(commands[i], args);
-        int arg2_count = split_args(commands[i+1], args2);
         args[arg_count] = NULL;
-        args2[arg2_count] = NULL;
 
         if (strcmp(args[0], "exit") == 0) {
             exit(EXIT_SUCCESS);
         }
 
-        //create pipe
+        // create pipe
         int fd[2];
         if (pipe(fd) == -1) {
             perror("Error pipe\n");
             exit(EXIT_FAILURE);
         }
 
-        //create processes
-        int pid1 = fork();
-        if (pid1 < 0) {
-            perror("Error pid1\n");
+        // create child process
+        pid_t pid = fork();
+        if (pid < 0) {
+            perror("Error fork\n");
             exit(EXIT_FAILURE);
-        }
-
-        if (pid1 == 0) {
-            //?
-            dup2(fd[1], STDOUT_FILENO);
+        } else if (pid == 0) {
+            // child process
+            if (in_fd != STDIN_FILENO) {
+                dup2(in_fd, STDIN_FILENO);
+                close(in_fd);
+            }
+            if (i < command_count - 1) {
+                dup2(fd[1], STDOUT_FILENO);
+            }
             close(fd[0]);
             close(fd[1]);
-            //child process 1 for program "a"
             execute_command(args);
-        }
-
-        int pid2 = fork();
-        if (pid2 < 0) {
-            perror("Error pid2\n");
             exit(EXIT_FAILURE);
-        }
-
-        if (pid2 == 0) {
-            //child process 2 (right hand side)
-            dup2(fd[0], STDIN_FILENO);
-            close(fd[0]);
+        } else {
+            // parent process
+            child_pids[i] = pid;
             close(fd[1]);
-            execute_command(args2);
+            in_fd = fd[0];
         }
+    }
 
-        close(fd[0]);
-        close(fd[1]);
-
-        waitpid(pid1, NULL, 0);
-        waitpid(pid2, NULL, 0);
+    // wait for all child processes to terminate
+    for (int i = 0; i < command_count; i++) {
+        waitpid(child_pids[i], NULL, 0);
     }
 }
+
 
 /**
  * It splits the commands by the ";" and "&&", and then creates an argument array for each command while looping over the commands.
@@ -333,6 +294,20 @@ int split_args(char *command, char *args[]) {
  * @param args This is the array of arguments that is a single command.
  */
 void execute_command(char *args[]) {
+    char *input_file = NULL;
+    char *output_file = NULL;
+
+    for (int i = 0; args[i] != NULL; i++) {
+        if (strcmp(args[i], "<") == 0 && args[i+1] != NULL) {
+            input_file = args[i+1];
+        } else if (strcmp(args[i], ">") == 0 && args[i+1] != NULL) {
+            output_file = args[i+1];
+        }
+    }
+    if (input_file != NULL && output_file != NULL && strcmp(input_file, output_file) == 0) {
+        printf("Error: input and output files cannot be equal!\n");
+        exit(EXIT_FAILURE);
+    }
     if (strcmp(args[0], "grep") == 0) {
         int arg_count = 0;
         while (args[arg_count] != NULL) {
@@ -344,7 +319,6 @@ void execute_command(char *args[]) {
             arg_count++;
         }
     }
-
     if (strcmp(args[0], "status") == 0) {
         printf("The most recent exit code is: %i\n", recent_exit_status);
         exit(EXIT_SUCCESS);
