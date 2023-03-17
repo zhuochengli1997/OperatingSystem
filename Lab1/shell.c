@@ -196,7 +196,6 @@ void execute_pipe_commands(char *input) {
         waitpid(pid1, NULL, 0);
         waitpid(pid2, NULL, 0);
     }
-
 }
 
 /**
@@ -252,7 +251,6 @@ void execute_commands(char *input) {
                 }
             }
         }
-
     }
 }
 
@@ -335,24 +333,21 @@ int split_args(char *command, char *args[]) {
  * @param args This is the array of arguments that is a single command.
  */
 void execute_command(char *args[]) {
-    if (strcmp(args[0], "exit") == 0) {
-        exit(EXIT_SUCCESS);
+    if (strcmp(args[0], "grep") == 0) {
+        int arg_count = 0;
+        while (args[arg_count] != NULL) {
+            arg_count++;
+        }
+        if (arg_count >= 3 && strcmp(args[arg_count - 2], "|") != 0 && strcmp(args[arg_count - 2], "||") != 0) {
+            args[arg_count] = args[arg_count - 1];
+            args[arg_count - 1] = "-h";
+            arg_count++;
+        }
     }
+
     if (strcmp(args[0], "status") == 0) {
         printf("The most recent exit code is: %i\n", recent_exit_status);
         exit(EXIT_SUCCESS);
-    }
-    if (strcmp(args[0],"cd") == 0){
-        if (args[1] == NULL || args[1][0] == '\0') {
-            printf("Error: cd requires folder to navigate to!\n");
-            exit(2);
-        }
-        if (chdir(args[1]) == -1) {
-            printf("Error: cd directory not found!\n");
-            exit(2);
-        }else{
-            return;
-        }
     }
     else if (execvp(args[0], args) == -1) {
         fprintf(stdout, "Error: command not found!\n");
