@@ -9,6 +9,7 @@
 #include "shell.h"
 #include "scanner.h"
 
+
 //variable to hold the most recent exit status
 int recent_exit_status = 0;
 
@@ -99,6 +100,7 @@ void execute_or_commands(char *input) {
 }
 
 
+
 /**
  * Splits the commands by "|", and splits each commands into separate arguments. Then it executes each
  * command in a separate process. This is for input containing "|".
@@ -159,6 +161,93 @@ void execute_pipe_commands(char *input) {
 }
 
 
+void execute_and_commands(char *input) {
+    char *commands[MAX_ARGS];
+    int command_count = split_and(input, commands);
+
+    int before_status = 0;
+    int status = 0;
+    for (int i = 0; i < command_count; i++) {
+        char *args[MAX_ARGS];
+        int arg_count = split_args(commands[i], args);
+        args[arg_count] = NULL;
+
+        before_status = recent_exit_status;
+
+        if (strcmp(args[0], "exit") == 0) {
+            exit(EXIT_SUCCESS);
+        }
+
+        pid_t pid = fork();
+        if (pid == -1) {
+            perror("fork");
+            exit(EXIT_FAILURE);
+        } else if (pid == 0) {
+            execute_command(args);
+        } else {
+            waitpid(pid, &status, 0);
+            if (WIFEXITED(status)) {
+                recent_exit_status = WEXITSTATUS(status);
+            }
+
+            // If the recent_exit_status is 0, then we can proceed to the next command
+            // Otherwise, we break out of the loop and exit
+            if (recent_exit_status != 0) {
+                break;
+            }
+
+            // If the next command contains "status", then we need to display the exit status of the current command
+            if (i < command_count - 1 && strstr(commands[i + 1], "status") != NULL) {
+                recent_exit_status = before_status;
+            }
+        }
+    }
+}
+
+void execute_background_commands(char *input) {
+    char *commands[MAX_ARGS];
+    int command_count = split_background(input, commands);
+
+    for (int i = 0; i < command_count; i++) {
+        char *args[MAX_ARGS];
+        int arg_count = split_args(commands[i], args);
+        args[arg_count] = NULL;
+
+        if (strcmp(args[0], "exit") == 0) {
+            exit(EXIT_SUCCESS);
+        }
+
+        pid_t pid = fork();
+        if (pid == -1) {
+            perror("fork");
+            exit(EXIT_FAILURE);
+        } else if (pid == 0) {
+            // If output redirection is specified, redirect stdout to file
+            if (is_output_redirected(args)) {
+                redirect_output(args);
+            }
+            // If input redirection is specified, redirect stdin to file
+            if (is_input_redirected(args)) {
+                redirect_input(args);
+            }
+            // If pipeline is specified, execute pipeline
+            if (is_pipeline(args)) {
+                execute_pipe_commands(commands[i]);
+            } else {
+                execute_command(args);
+            }
+            exit(EXIT_FAILURE);
+        } else {
+            // Parent process
+            if (!is_output_redirected(args)) {
+                // If output redirection is not specified, print the process ID
+                printf("[%d]\n", pid);
+            }
+        }
+    }
+}
+
+
 /**
  * It splits the commands by the ";" and "&&", and then creates an argument array for each command while looping over the commands.
  * Then it executes each command in a seperate process
@@ -171,12 +260,21 @@ void execute_commands(char *input) {
 
     int status = 0;
     for (int i = 0; i < command_count; i++) {
-        //To check if the command list contains the || character, such that we know we need to call execute_or_commands
+        // To check if the command list contains the || character, such that we know we need to call execute_or_commands
         if (strstr(commands[i], "||") != NULL) {
             execute_or_commands(commands[i]);
         }
-        else if (strstr(commands[i], "|") != NULL){
+        // To check if the command list contains the && character, such that we know we need to call execute_and_commands
+        else if (strstr(commands[i], "&&") != NULL) {
+            execute_and_commands(commands[i]);
+        }
+        // To check if the command list contains the pipe character (|), such that we know we need to call execute_pipe_commands
+        else if (strstr(commands[i], "|") != NULL) {
             execute_pipe_commands(commands[i]);
+        }
+        // To check if the command list contains the ampersand character (&), such that we know we need to call execute_background_commands
+        else if (commands[i][strlen(commands[i])-1] == '&') {
+            execute_background_commands(commands[i]);
         }
         else {
             char *args[MAX_ARGS];
@@ -244,10 +342,24 @@ int split_or(char *input, char *commands[]) {
  */
 int split_commands(char *input, char *commands[]) {
     int command_count = 0;
-    char *command = strtok(input, "&&;");
+    char *command = strtok(input, ";");
     while (command != NULL && command_count < MAX_ARGS) {
-        commands[command_count++] = command;
-        command = strtok(NULL, "&&;");
+        // Check if the command is a background command
+        if (command[strlen(command)-1] == '&') {
+            commands[command_count++] = command;
+        }
+        // Check if the command is pipelined
+        else if (strstr(command, "|") != NULL) {
+            commands[command_count++] = command;
+        }
+        else {
+            char *and_command = strtok(command, "&&");
+            while (and_command != NULL && command_count < MAX_ARGS) {
+                commands[command_count++] = and_command;
+                and_command = strtok(NULL, "&&");
+            }
+        }
+        command = strtok(NULL, ";");
     }
     return command_count;
 }
@@ -286,6 +398,100 @@ int split_args(char *command, char *args[]) {
         arg = strtok(NULL, " ");
     }
     return arg_count;
+}
+
+// Splits input by "&&" and returns the number of commands found
+int split_and(char *input, char **commands) {
+    int command_count = 0;
+    char *token = strtok(input, "&&");
+    while (token != NULL) {
+        commands[command_count++] = token;
+        token = strtok(NULL, "&&");
+    }
+    return command_count;
+}
+
+// Splits input by "&" and returns the number of commands found
+int split_background(char *input, char **commands) {
+    int command_count = 0;
+    char *token = strtok(input, "&");
+    while (token != NULL) {
+        commands[command_count++] = token;
+        token = strtok(NULL, "&");
+    }
+    return command_count;
+}
+
+// Checks if output redirection is specified in args
+int is_output_redirected(char **args) {
+    int i = 0;
+    while (args[i] != NULL) {
+        if (strcmp(args[i], ">") == 0) {
+            return 1;
+        }
+        i++;
+    }
+    return 0;
+}
+
+// Redirects stdout to file specified in args
+void redirect_output(char **args) {
+    int i = 0;
+    while (args[i] != NULL) {
+        if (strcmp(args[i], ">") == 0) {
+            int fd = open(args[i+1], O_WRONLY|O_CREAT|O_TRUNC, 0644);
+            if (fd == -1) {
+                perror("open");
+                exit(EXIT_FAILURE);
+            }
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
+            break;
+        }
+        i++;
+    }
+}
+
+// Checks if input redirection is specified in args
+int is_input_redirected(char **args) {
+    int i = 0;
+    while (args[i] != NULL) {
+        if (strcmp(args[i], "<") == 0) {
+            return 1;
+        }
+        i++;
+    }
+    return 0;
+}
+
+// Redirects stdin to file specified in args
+void redirect_input(char **args) {
+    int i = 0;
+    while (args[i] != NULL) {
+        if (strcmp(args[i], "<") == 0) {
+            int fd = open(args[i+1], O_RDONLY);
+            if (fd == -1) {
+                perror("open");
+                exit(EXIT_FAILURE);
+            }
+            dup2(fd, STDIN_FILENO);
+            close(fd);
+            break;
+        }
+        i++;
+    }
+}
+
+// Checks if pipeline is specified in args
+int is_pipeline(char **args) {
+    int i = 0;
+    while (args[i] != NULL) {
+        if (strcmp(args[i], "|") == 0) {
+            return 1;
+        }
+        i++;
+    }
+    return 0;
 }
 
 /**

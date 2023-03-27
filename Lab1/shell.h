@@ -24,6 +24,14 @@ int split_pipeline(char *input, char *commands[]);
 
 int split_args(char *command, char *args[]);
 
+int split_and(char *input, char **commands);
+int split_background(char *input, char **commands);
+int is_pipeline(char **args);
+int is_output_redirected(char **args);
+int is_input_redirected(char **args);
+void redirect_output(char **args);
+void redirect_input(char **args);
+
 void check_exit(char* string);
 
 
