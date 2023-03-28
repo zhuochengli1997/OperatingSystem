@@ -5,12 +5,15 @@
 
 #define MAX_INPUT_SIZE 102400
 #define MAX_ARGS 640
+#define MAX_BG_PROCS 50
 
 void execute_or_commands(char *input);
 
 void execute_pipe_commands(char *input);
 
 void execute_command(char *input[]);
+
+void execute_bg_commands(char *input);
 
 bool read_input(char *input);
 
@@ -20,19 +23,11 @@ int split_or(char *input, char *commands[]);
 
 int split_commands(char *input, char *commands[]);
 
+void replace_ampersand(char *command);
+
 int split_pipeline(char *input, char *commands[]);
 
 int split_args(char *command, char *args[]);
-
-int split_and(char *input, char **commands);
-int split_background(char *input, char **commands);
-int is_pipeline(char **args);
-int is_output_redirected(char **args);
-int is_input_redirected(char **args);
-void redirect_output(char **args);
-void redirect_input(char **args);
-
-void check_exit(char* string);
 
 
 #endif
