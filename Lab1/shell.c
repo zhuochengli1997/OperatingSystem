@@ -191,19 +191,25 @@ void execute_bg_commands(char *input) {
             execv(args[0], args);
             exit(0);
         } else if (pid > 0) { // parent process
-            if (strstr(token, "sleep") == NULL) {
-                child_pids[num_child_pids++] = pid;
-            }
+            child_pids[num_child_pids++] = pid;
         } else { // fork failed
             printf("Failed to fork process.\n");
             return;
         }
     }
 
+    int status = 0;
     // Wait for all child processes to finish
     for (int j = 0; j < num_child_pids; j++) {
-        waitpid(child_pids[j], NULL, 0);
+        waitpid(child_pids[j], &status, 0);
+        if (WIFEXITED(status)) {
+            recent_exit_status = WEXITSTATUS(status);
+        }
+        if (status != 0) {
+            break;
+        }
     }
+    
 }
 
 
