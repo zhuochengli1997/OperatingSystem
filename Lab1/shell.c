@@ -51,8 +51,6 @@ int execute_cd_command(char *args[]) {
     return 0;
 }
 
-
-
 /**
  * It splits the input into commands, then splits each command into arguments, then executes each
  * command in a separate process. This is for the input containing "||".
@@ -171,6 +169,12 @@ void execute_bg_commands(char *input) {
         p++;
     }
 
+    bool last_command_bg = false;
+
+    if (*(p-1) == '&') {
+        last_command_bg = true;
+    }
+
     // Split input into tokens
     char *tokens[MAX_ARGS];
     int i = 0;
@@ -179,7 +183,7 @@ void execute_bg_commands(char *input) {
         i++;
         tokens[i] = strtok(NULL, "&");
     }
-
+    
     // Execute commands in the background
     pid_t child_pids[MAX_ARGS];
     int num_child_pids = 0;
@@ -205,15 +209,12 @@ void execute_bg_commands(char *input) {
     }
 
     int status = 0;
-    // Wait for all child processes to finish
-    for (int j = 0; j < num_child_pids; j++) {
-        waitpid(child_pids[j], &status, 0);
-        if (WIFEXITED(status)) {
-            recent_exit_status = WEXITSTATUS(status);
-        }
-        if (status != 0) {
-            break;
-        }
+    // Wait for a foreground process (if any!)
+    if (!last_command_bg) {
+        waitpid(child_pids[i-1], &status, 0);
+    } 
+    if (WIFEXITED(status)) {
+        recent_exit_status = WEXITSTATUS(status);
     }
     
 }
