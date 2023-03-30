@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <unistd.h>
+#include <signal.h>
 #include "shell.h"
 #include "scanner.h"
 

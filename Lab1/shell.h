@@ -29,5 +29,7 @@ int split_pipeline(char *input, char *commands[]);
 
 int split_args(char *command, char *args[]);
 
+void sigchld_handler(int sig);
+
 
 #endif

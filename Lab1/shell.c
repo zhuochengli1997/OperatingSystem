@@ -421,7 +421,7 @@ void execute_command(char *args[]) {
     if (strcmp(args[0], "status") == 0) {
         printf("The most recent exit code is: %i\n", recent_exit_status);
         exit(EXIT_SUCCESS);
-    }else if(strcmp(args[0], "jobs") == 0){
+    } else if(strcmp(args[0], "jobs") == 0){
         if(num_bg_procs==0){
             printf("No background processes!\n");
         }else{
@@ -429,6 +429,7 @@ void execute_command(char *args[]) {
                 printf("Process running with index %d\n",i);
             }
         }
+        exit(EXIT_SUCCESS);
     }
     else if (execvp(args[0], args) == -1) {
         fprintf(stdout, "Error: command not found!\n");
