@@ -11,6 +11,8 @@
 
 //variable to hold the most recent exit status
 int recent_exit_status = 0;
+//runnning bg processes
+int num_bg_procs = 0;
 
 /**
  * It reads a line of input from the user, and if the user typed "exit", it exits the program
@@ -24,7 +26,7 @@ bool read_input(char *input) {
         return false;
     }
     input[strcspn(input, "\n")] = '\0';
-    if (strcmp(input, "exit") == 0) {
+    if (strcmp(input, "exit") == 0 && num_bg_procs == 0) {
         exit(EXIT_SUCCESS);
     }
     return true;
@@ -164,6 +166,7 @@ void execute_bg_commands(char *input) {
     while (*p) {
         if (*p == '*' && (*(p+1) == '\0' || *(p+1) == ' ')) {
             *p = '&';
+            num_bg_procs++;
         }
         p++;
     }
@@ -188,6 +191,9 @@ void execute_bg_commands(char *input) {
         pid_t pid = fork();
         if (pid == 0) { // child process
             char *args[] = {"/bin/sh", "-c", token, NULL};
+            if (strcmp(token, " exit") == 0 && num_bg_procs > 0) {
+                printf("Error: there are still background processes running!\n");
+            }
             execv(args[0], args);
             exit(0);
         } else if (pid > 0) { // parent process
@@ -212,8 +218,6 @@ void execute_bg_commands(char *input) {
     
 }
 
-
-
 /**
  * It splits the commands by the ";" and "&&", and then creates an argument array for each command while looping over the commands.
  * Then it executes each command in a seperate process
@@ -226,6 +230,15 @@ void execute_commands(char *input) {
 
     int status = 0;
     for (int i = 0; i < command_count; i++) {
+        if (num_bg_procs > 0) {
+            pid_t pid;
+            while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+                num_bg_procs--;
+                if (WIFEXITED(status)) {
+                    recent_exit_status = WEXITSTATUS(status);
+                }
+            }
+        }
         //To check if the command list contains the || character, such that we know we need to call execute_or_commands
         if (strstr(commands[i], "||") != NULL) {
             execute_or_commands(commands[i]);
@@ -242,8 +255,10 @@ void execute_commands(char *input) {
             int arg_count = split_args(commands[i], args);
             args[arg_count] = NULL;
 
-            if (strcmp(args[0], "exit") == 0) {
+            if (strcmp(args[0], "exit") == 0 && num_bg_procs == 0) {
                 exit(EXIT_SUCCESS);
+            } else if (strcmp(args[0], "exit") == 0 && num_bg_procs != 0) {
+                printf("Error: there are still background processes running!\n");
             }
             else if (strcmp(args[0], "cd") == 0) {
                 int cd_status = execute_cd_command(args);
