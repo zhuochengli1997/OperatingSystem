@@ -525,6 +525,27 @@ void execute_command(char *args[])
         }
         exit(EXIT_SUCCESS);
     }
+    if (strcmp(args[0], "kill") == 0)
+    {
+        printf("Killing process with id %s\n", args[1]);
+        if (args[1] == NULL)
+        {
+            printf("Error: no process id given!\n");
+            exit(EXIT_FAILURE);
+        }
+        int pid = atoi(args[1]);
+        if (pid == 0)
+        {
+            printf("Error: invalid process id!\n");
+            exit(EXIT_FAILURE);
+        }
+        if (kill(pid, SIGTERM) == -1)
+        {
+            printf("Error: process not found!\n");
+            exit(EXIT_FAILURE);
+        }
+        exit(EXIT_SUCCESS);
+    }
 
     else if (execvp(args[0], args) == -1)
     {
