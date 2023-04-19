@@ -518,13 +518,35 @@ void execute_command(char *args[])
         }
         else
         {
-            for (int i = num_bg_procs; i > 0; i--)
+            for (int i = 1; i <= num_bg_procs; i++)
             {
                 printf("Process running with index %d\n", i);
             }
         }
         exit(EXIT_SUCCESS);
     }
+    else if (strcmp(args[0], "kill"))
+    {
+        printf("Killing process with id %s\n", args[1]);
+        if (args[1] == NULL)
+        {
+            printf("Error: no process id given!\n");
+            exit(EXIT_FAILURE);
+        }
+        int pid = atoi(args[1]);
+        if (pid == 0)
+        {
+            printf("Error: invalid process id!\n");
+            exit(EXIT_FAILURE);
+        }
+        if (kill(pid, SIGTERM) == -1)
+        {
+            printf("Error: process not found!\n");
+            exit(EXIT_FAILURE);
+        }
+        exit(EXIT_SUCCESS);
+    }
+
     else if (execvp(args[0], args) == -1)
     {
         fprintf(stdout, "Error: command not found!\n");
